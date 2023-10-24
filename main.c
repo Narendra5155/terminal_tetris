@@ -96,6 +96,16 @@ char getCharacter(int i){
 }
 
 int main(){
+    // getting the current console screen buffer resolution
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE),&info);
+    screen_height=info.dwSize.Y;
+    screen_width=info.dwSize.X;
+    if(screen_height<30 || screen_width < 80){
+        printf("Resize you console window to full screen then try to execute the game !");
+        exit(0);
+    }
+
     //creating assests
     char* screen;
     screen=(char*)calloc(screen_height*screen_width,sizeof(char));
@@ -145,26 +155,15 @@ int main(){
     for(int i=0;i<screen_height*screen_width;i++)
     screen[i]=' ';
     
-    //  for(int y=0;y<field_height;y++){
-    //    for(int x=0;x<field_width;x++){
-    //         screen[(y+2)*screen_width+(x+2)]=getCharacter(pfield[y*field_width+x]);
-    //     }
-    // }
+
     
     HANDLE console_buffer= CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,0,NULL,CONSOLE_TEXTMODE_BUFFER,NULL);
-    SetConsoleActiveScreenBuffer(console_buffer);
     DWORD words_written =0;
     COORD origin;
     origin.X=0;
     origin.Y=0;
     bool isGameOver =false;
-   SMALL_RECT size;
-    size.Top=0;
-    size.Left=0;
-    size.Right=80;
-    size.Bottom=30;
-    //system("MODE 80,30");
-    SetConsoleWindowInfo(console_buffer,true,&size);
+    SetConsoleActiveScreenBuffer(console_buffer);
     int currentID=0;
     int currentx=field_width/2;
     int currenty=0;
@@ -172,8 +171,6 @@ int main(){
 
     bool bkey[4];
     bool isthekeyHeld=false;
-    int droprate=1;
-    int maxdroprate=10;
     int speed=20;
     int speedCounter=0;
     bool forcedown=false;
@@ -320,6 +317,9 @@ int main(){
        // display frame
        WriteConsoleOutputCharacter(console_buffer,screen,screen_height*screen_width,origin,&words_written);
        //Game over condition
+       if(GetAsyncKeyState((unsigned char)'Q') & 0x8000)
+       isGameOver=true;
+
        for(int px=1;px<field_width-1;px++){
             if(pfield[field_width+px]!=0){
             isGameOver=true;
@@ -329,6 +329,7 @@ int main(){
     
        }
        CloseHandle(console_buffer);
+       fflush(stdout);
        printf("Game over .\nYour Score is : %d\n",score);
     
     
